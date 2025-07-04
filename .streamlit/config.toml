@@ -1,0 +1,10 @@
+[server]
+headless = true
+port = 8501
+enableCORS = false
+baseUrlPath = "sdg3health"
+
+[theme]
+base="light"
+primaryColor="#06a6a1"
+textColor="#011e41"
