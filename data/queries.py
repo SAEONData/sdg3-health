@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import geopandas as gpd
 from config.database import DatabaseConfig
-from config.settings import CACHE_CONFIG
+from config.settings import CACHE_CONFIG, COLORS, HEALTH_THRESHOLDS
 import logging
 
 class GeographicQueries:
@@ -167,3 +167,168 @@ class GeographicQueries:
         except Exception as e:
             st.error(f"Error loading municipality boundaries: {str(e)}")
             return gpd.GeoDataFrame()
+        
+    
+    @st.cache_data(ttl=CACHE_CONFIG["health_indicators_ttl"])
+    def get_national_averages(_self) -> dict:
+        """Get national averages for all key health indicators"""
+        try:
+            query = f'''
+            SELECT 
+                -- Health System Indicators
+                AVG("Health_worker_density__index_") as national_health_worker_density,
+                AVG("Medical_practitioners_per_100_0") as national_doctors_per_100k,
+                AVG("Professional_nurses_per_100_000") as national_nurses_per_100k,
+                AVG("Pharmacists_per_100_000_populat") as national_pharmacists_per_100k,
+            
+                -- Communicable Diseases
+                AVG("TB_DS_treatment_success_rate") as national_tb_success_rate,
+                AVG("TB_MDR_treatment_success_rate") as national_tb_mdr_success_rate,
+                AVG("Adult_living_with_HIV_viral_loa") as national_hiv_viral_suppression,
+                AVG("Antiretroviral_effective_covera") as national_art_coverage,
+            
+                -- Non-Communicable Diseases  
+                AVG("Diabetes_prevalence") as national_diabetes_prevalence,
+                AVG("Diabetes_treatment_coverage") as national_diabetes_treatment,
+                AVG("Cervical_cancer_screening_cov_1") as national_cervical_screening,
+                AVG("Percentage_of_adults_overweight") as national_overweight_rate,
+            
+                -- Social Determinants
+                AVG("Percentage_no_money_for_food") as national_food_insecurity,
+                AVG("Unemployment_rate") as national_unemployment_rate,
+                AVG("Percentage_limited_Hospital") as national_limited_hospital_access,
+                AVG("Percentage_limited_clinic") as national_limited_clinic_access,
+            
+                -- Health System Infrastructure
+                AVG("Hospital_beds_per_10_000_target") as national_beds_per_10k,
+                AVG("Percentage_Ideal_clinics") as national_ideal_clinics,
+                AVG("PHC_utilisation_rate") as national_phc_utilization,
+            
+                -- Population and Facilities
+                SUM("Total_population") as national_total_population,
+                SUM("Number_of_health_facilities") as national_total_facilities,
+                SUM("Total_living_with_HIV") as national_total_hiv_cases,
+            
+                -- Additional Indicators
+                AVG("Immunisation_under_1_year_cov_1") as national_immunization_coverage,
+                AVG("Live_birth_in_facility_1") as national_facility_births,
+                AVG("Tobacco_non_smoking_prevalence") as national_tobacco_non_smoking
+            
+            FROM {_self.config.table_name}
+            WHERE "Total_population" IS NOT NULL 
+            AND "Total_population" > 0
+            '''
+        
+            result = pd.read_sql(query, _self.engine)
+        
+            if result.empty:
+                st.warning("⚠️ Could not calculate national averages")
+                return {}
+        
+            national_averages = result.iloc[0].to_dict()
+        
+            cleaned_averages = {}
+            for key, value in national_averages.items():
+                if pd.notna(value):
+                    cleaned_averages[key] = float(value)
+                else:
+                    cleaned_averages[key] = None
+        
+            return cleaned_averages
+        
+        except Exception as e:
+            st.error(f"❌ Error calculating national averages: {str(e)}")
+            return {}
+        
+
+    
+    def calculate_performance_vs_national(_self, local_value, national_avg, indicator_name: str) -> dict:
+        """
+        Calculate performance comparison using HEALTH_THRESHOLDS from settings
+        
+        Args:
+            local_value: Local area indicator value
+            national_avg: National average for the same indicator
+            indicator_name: Name of the indicator to determine thresholds
+        
+        Returns:
+            dict: Performance analysis with status based on actual thresholds
+        """
+        
+        if pd.isna(local_value) or pd.isna(national_avg) or national_avg == 0:
+            return {
+                "status": "insufficient_data",
+                "percentage_diff": None,
+                "interpretation": "Insufficient data for comparison",
+                "color": COLORS["insufficient_data"],
+                "emoji": "⚪",
+                "direction": "unknown"
+            }
+        
+        percentage_diff = ((float(local_value) - float(national_avg)) / float(national_avg)) * 100
+        
+        threshold_mapping = {
+            "health_worker_density": "health_worker_density",
+            "tb_success_rate": "tb_treatment_success", 
+            "tb_ds_treatment_success_rate": "tb_treatment_success",
+            "hiv_viral_suppression": "hiv_viral_suppression",
+            "adult_living_with_hiv_viral_loa": "hiv_viral_suppression",
+            "immunization_coverage": "immunization_coverage",
+            "immunisation_under_1_year_cov": "immunization_coverage"
+        }
+        
+        threshold_key = None
+        indicator_lower = indicator_name.lower()
+        
+        for key_pattern, threshold_name in threshold_mapping.items():
+            if key_pattern in indicator_lower:
+                threshold_key = threshold_name
+                break
+        
+        if threshold_key and threshold_key in HEALTH_THRESHOLDS:
+            thresholds = HEALTH_THRESHOLDS[threshold_key]
+            local_val = float(local_value)
+            
+            if local_val >= thresholds["excellent"]:
+                status = "excellent"
+                emoji = "🟢"
+            elif local_val >= thresholds["good"]:
+                status = "good" 
+                emoji = "🟢"
+            elif local_val >= thresholds["moderate"]:
+                status = "moderate"
+                emoji = "🟡"
+            elif local_val >= thresholds["poor"]:
+                status = "needs_attention"
+                emoji = "🟠"
+            else:
+                status = "poor"
+                emoji = "🔴"
+            
+            interpretation = f"{local_val:.1f} ({status.replace('_', ' ')}) | {abs(percentage_diff):.1f}% {'above' if percentage_diff > 0 else 'below'} national avg"
+            
+        else:
+            # Fallback to percentage-based comparison for indicators without specific thresholds
+            if percentage_diff >= 15:
+                status, emoji = "excellent", "🟢"
+            elif percentage_diff >= 5:
+                status, emoji = "good", "🟢"
+            elif percentage_diff >= -5:
+                status, emoji = "moderate", "🟡"
+            elif percentage_diff >= -15:
+                status, emoji = "needs_attention", "🟠"
+            else:
+                status, emoji = "poor", "🔴"
+            
+            interpretation = f"{abs(percentage_diff):.1f}% {'above' if percentage_diff > 0 else 'below'} national average"
+        
+        return {
+            "status": status,
+            "percentage_diff": round(percentage_diff, 1),
+            "interpretation": interpretation,
+            "color": COLORS["geographic_performance"][status],
+            "emoji": emoji,
+            "threshold_used": threshold_key is not None,
+            "local_value": local_value,
+            "national_value": national_avg
+        }

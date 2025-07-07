@@ -209,7 +209,7 @@ class MapVisualization:
         min_val = gdf[indicator_column].min()
         max_val = gdf[indicator_column].max()
 
-        bins = self._generate_nice_bins(min_val, max_val, num_bins=6)
+        bins = self._generate_bins(min_val, max_val, num_bins=6)
 
         choropleth_args = {
             "geo_data": gdf,

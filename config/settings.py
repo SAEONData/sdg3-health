@@ -130,7 +130,7 @@ PAGES_CONFIG = {
 # Caching configuration
 CACHE_CONFIG = {
     "geographic_data_ttl": 3600 * 24,  
-    "health_indicators_ttl": 3600 * 2, 
+    "health_indicators_ttl": 3600 * 24, 
     "spatial_data_ttl": 3600 * 6,     
     "summary_stats_ttl": 3600,         
 }
