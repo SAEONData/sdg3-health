@@ -141,28 +141,66 @@ HEALTH_THRESHOLDS = {
         "excellent": 25.0,    
         "good": 15.0,
         "moderate": 10.0,
-        "poor": 5.0
+        "poor": 5.0,
+        "direction": "higher_better"
     },
     "tb_treatment_success": {
-        "excellent": 85.0,    # percentage
+        "excellent": 85.0,
         "good": 75.0, 
         "moderate": 65.0,
-        "poor": 50.0
+        "poor": 50.0,
+        "direction": "higher_better"
     },
     "hiv_viral_suppression": {
-        "excellent": 90.0,    # percentage
+        "excellent": 90.0, 
         "good": 80.0,
         "moderate": 70.0, 
-        "poor": 60.0
+        "poor": 60.0,
+        "direction": "higher_better"
     },
-    "immunization_coverage": {
-        "excellent": 95.0,    # percentage
+    "art_coverage": {
+        "excellent": 95.0,
         "good": 85.0,
         "moderate": 75.0,
-        "poor": 65.0
+        "poor": 65.0,
+        "direction": "higher_better"
+    },
+    "hiv_prevalence": {
+        "excellent": 8000.0, 
+        "good": 10000.0,
+        "moderate": 12000.0,
+        "poor": 15000.0,
+        "direction": "lower_better"
+    },
+    "hiv_testing_coverage": {
+        "excellent": 95.0,
+        "good": 85.0,
+        "moderate": 75.0,
+        "poor": 65.0,
+        "direction": "higher_better"
+    },
+    "tb_drug_resistance": {
+        "excellent": 2.0,
+        "good": 5.0,
+        "moderate": 10.0,
+        "poor": 15.0,
+        "direction": "lower_better"
+    },
+    "tb_treatment_completion": {
+        "excellent": 95.0,
+        "good": 90.0,
+        "moderate": 85.0,
+        "poor": 80.0,          
+        "direction": "higher_better"
+    },
+    "immunization_coverage": {
+        "excellent": 95.0,
+        "good": 85.0,
+        "moderate": 75.0,
+        "poor": 65.0,
+        "direction": "higher_better"
     }
 }
-
 
 
 MAP_CONFIG = {
@@ -180,14 +218,13 @@ MAP_CONFIG = {
 
 LAYOUT_CONFIG = {
     "sidebar_width": 300,
-    "main_content_columns": [2, 1],      # Map column vs Summary column ratio
+    "main_content_columns": [2, 1],
     "summary_panel_height": 500,
     "chart_height": 400,
-    "metrics_columns": 2,                # Number of columns for metrics display
+    "metrics_columns": 2,
 }
 
 
-# SDG 3 specific indicators and targets
 SDG3_TARGETS = {
     "maternal_mortality": {
         "target_value": 70,  # per 100,000 live births by 2030

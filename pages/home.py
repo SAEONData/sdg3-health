@@ -9,7 +9,7 @@ import pandas as pd
 def render():
     """Render the complete Home - SDG 3 Overview page"""
     
-    st.title("🏠 SDG 3: Ensure Good Health and Promote Well-being for All")
+    st.title("South Africa Health Dashboard")
     st.markdown("### South Africa Health Dashboard Overview")
     
     geo_filter = GeographicFilter()
@@ -133,7 +133,6 @@ def render_summary_panel(selection: dict):
                 )
         
         with col2:
-            # HIV Cases with national context
             hiv_cases = summary_data.get('total_hiv_cases', 0)
             if pd.notna(hiv_cases):
 
@@ -157,7 +156,6 @@ def render_summary_panel(selection: dict):
                     help=help_text
                 )
             
-            # Health Facilities with national context
             facilities = summary_data.get('total_facilities', 0)
             if pd.notna(facilities):
                 
@@ -174,7 +172,6 @@ def render_summary_panel(selection: dict):
                     help=help_text
                 )
         
-        # Population information with national context
         st.markdown("#### 👥 Population Information")
         population = summary_data.get('total_population', 0)
         if pd.notna(population):
@@ -185,7 +182,6 @@ def render_summary_panel(selection: dict):
             else:
                 display_pop = f"{int(population):,}"
             
-            # Show proportion of national population
             national_pop = national_averages.get("national_total_population") if national_averages else None
             if national_pop and national_pop > 0:
                 proportion = (population / national_pop) * 100
@@ -199,11 +195,9 @@ def render_summary_panel(selection: dict):
                 help=help_text
             )
         
-        # Performance vs National Average section with reference values
         if national_averages:
             st.markdown("#### 📈 Performance vs National Average")
             
-            # Show national reference values in an expandable section
             with st.expander("📊 View National Average Values", expanded=False):
                 st.markdown("**National Averages for Comparison:**")
                 
@@ -224,7 +218,6 @@ def render_summary_panel(selection: dict):
             
             performance_ind = []
             
-            # Health Worker Density
             if pd.notna(health_worker_density):
                 perf = geo_queries.calculate_performance_vs_national(
                     health_worker_density,
@@ -239,7 +232,6 @@ def render_summary_panel(selection: dict):
                     "national": national_averages.get("national_health_worker_density")
                 })
             
-            # TB Treatment Success
             if pd.notna(tb_success):
                 perf = geo_queries.calculate_performance_vs_national(
                     tb_success,
@@ -253,7 +245,6 @@ def render_summary_panel(selection: dict):
                     "national": national_averages.get("national_tb_success_rate")
                 })
             
-            # Display performance indicators with clear local vs national context
             for indicator in performance_ind:
                 perf = indicator["performance"]
                 local_val = indicator["local"]
@@ -343,8 +334,8 @@ def render_navigation_buttons():
     st.markdown("---")
     st.markdown("**📋 About This Dashboard**")
     st.markdown("""
-    This dashboard tracks South Africa's progress towards **SDG 3: Ensure Good Health and Promote Well-being for All**.
-    
+    This dashboard tracks South Africa's progress towards **South Africa Health Goals as per the SDG 3**.
+
     **Key Features:**
     - 🎯 SDG target tracking
     - 🗺️ Interactive geographic filtering

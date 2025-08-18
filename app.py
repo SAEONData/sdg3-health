@@ -1,5 +1,5 @@
 import streamlit as st
-from pages import home
+from pages import home, communicable_diseases
 from config.settings import APP_CONFIG
 from config.database import DatabaseConfig
 
@@ -23,12 +23,22 @@ def initialize_database():
                 st.stop()
 
 def main():
-    """Main application entry point - Home page only for now"""
+    """Main application entry point with page navigation"""  
     
     initialize_database()
     
-    st.sidebar.markdown("## 🏠 SDG 3")
-    home.render()
+    st.sidebar.markdown("## South African Health Dashboard")
+    
+    page = st.sidebar.selectbox(
+        "Select Page:",
+        options=["Home - Health Overview", "Communicable Diseases"],
+        help="Navigate between different health analysis areas"
+    )
+
+    if page == "Home - Health Overview":
+        home.render()
+    elif page == "Communicable Diseases":
+        communicable_diseases.render()
 
 if __name__ == "__main__":
     main()

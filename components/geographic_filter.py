@@ -23,7 +23,7 @@ class GeographicFilter:
     def render_sidebar_filter(self) -> Dict[str, Optional[str]]:
         """Render the geographic filter in sidebar with detailed feedback"""
         
-        st.sidebar.markdown("### 🌍 Geographic Filter")
+        st.sidebar.markdown("### Filter")
         
         selection = {
             "province_code": None,
